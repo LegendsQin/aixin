@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<body>
+<canvas id="heartCanvas" style="background:black;"></canvas>
+
+<script>
+const canvas = document.getElementById('heartCanvas');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+// 爱心参数方程（翻转版）
+function heartPosition(theta) {
+    const x = 16 * Math.pow(Math.sin(theta), 3);
+    const y = (13 * Math.cos(theta) - 5*Math.cos(2*theta) - 2*Math.cos(3*theta) - Math.cos(4*theta));
+    return {x, y};
+}
+
+class Particle {
+    constructor() {
+        this.theta = Math.random() * 2 * Math.PI;
+        const {x, y} = heartPosition(this.theta);
+        this.baseRadius = Math.hypot(x, y);
+        this.angle = Math.atan2(y, x);
+        this.phase = Math.random() * 2 * Math.PI;
+        this.hue = Math.random() * 360;
+    }
+
+    update(time) {
+        this.hue = (this.hue + 0.5) % 360;
+        this.currentRadius = this.baseRadius * (1 + 0.2 * Math.sin(time * 3 + this.phase));
+    }
+
+    getPos(scale) {
+        return {
+            x: this.currentRadius * Math.cos(this.angle) * scale + canvas.width/2,
+            y: -this.currentRadius * Math.sin(this.angle) * scale + canvas.height/2
+        };
+    }
+
+    getColor() {
+        return `hsl(${this.hue}, 100%, 50%)`;
+    }
+}
+
+// 初始化粒子
+const particles = Array.from({length: 300}, () => new Particle());
+
+function animate(timestamp) {
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    particles.forEach(p => {
+        p.update(timestamp / 1000);
+        const pos = p.getPos(12);
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, 2, 0, 2 * Math.PI);
+        ctx.fillStyle = p.getColor();
+        ctx.fill();
+    });
+
+    requestAnimationFrame(animate);
+}
+
+animate(0);
+</script>
+</body>
+</html>
